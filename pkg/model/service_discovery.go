@@ -1,6 +1,7 @@
 package model
 
 import (
+	log "github.com/rs/zerolog"
 	"istio.io/istio/pilot/pkg/model"
 	"istio.io/istio/pkg/config/host"
 	"istio.io/istio/pkg/config/labels"
@@ -28,28 +29,27 @@ func (l *LocalServiceDiscovery) Services() []*model.Service {
 }
 
 func (l *LocalServiceDiscovery) GetService(host.Name) *model.Service {
-	panic("implement me")
+	return &model.Service{}
 }
 
 func (l *LocalServiceDiscovery) GetProxyServiceTargets(*model.Proxy) []model.ServiceTarget {
-	panic("implement me")
+	return []model.ServiceTarget{}
 }
 
 func (l *LocalServiceDiscovery) GetProxyWorkloadLabels(*model.Proxy) labels.Instance {
-	panic("implement me")
+	return labels.Instance{}
 }
 
 func (l *LocalServiceDiscovery) GetIstioServiceAccounts(*model.Service) []string {
-	return nil
+	return []string{}
 }
 
 func (l *LocalServiceDiscovery) NetworkGateways() []model.NetworkGateway {
-	// TODO implement fromRegistry logic from kube controller if needed
-	return nil
+	return []model.NetworkGateway{}
 }
 
 func (l *LocalServiceDiscovery) MCSServices() []model.MCSServiceInfo {
-	return nil
+	return []model.MCSServiceInfo{}
 }
 
 func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*model.ServiceInstance {
