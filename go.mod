@@ -5,7 +5,9 @@ go 1.24.0
 toolchain go1.24.2
 
 require (
-	gopkg.in/yaml.v2 v2.4.0
+	github.com/rs/zerolog v1.34.0
+	google.golang.org/protobuf v1.36.6
+	istio.io/api v1.25.0-alpha.0.0.20250401070747-f55d9659dc27
 	istio.io/istio v0.0.0-20250405135649-76765f3d9a9c
 )
 
@@ -87,7 +89,6 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
@@ -121,12 +122,10 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
 	google.golang.org/grpc v1.71.0 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	istio.io/api v1.25.0-alpha.0.0.20250401070747-f55d9659dc27 // indirect
 	istio.io/client-go v1.25.0-alpha.0.0.20250401071445-73edf716803d // indirect
 	k8s.io/api v0.32.3 // indirect
 	k8s.io/apiextensions-apiserver v0.32.3 // indirect

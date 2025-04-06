@@ -36,17 +36,23 @@ func main() {
 		collections.ServiceEntry,
 	))
 
-	if _, err := store.Create(config.Config{
-		Meta: config.Meta{
-			GroupVersionKind: gvk.ServiceEntry,
-			Namespace:        "default",
-			Name:             "example-service",
+	configs := []config.Config{
+		{
+			Meta: config.Meta{
+				GroupVersionKind: gvk.ServiceEntry,
+				Namespace:        "default",
+				Name:             "example-service",
+			},
+			Spec: &v1.ServiceEntry{
+				Hosts: []string{"example.com"},
+			},
 		},
-		Spec: &v1.ServiceEntry{
-			Hosts: []string{"example.com"},
-		},
-	}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to create ServiceEntry")
+	}
+
+	for _, c := range configs {
+		if _, err := store.Create(c); err != nil {
+			log.Fatal().Err(err).Msg("Failed to create ServiceEntry")
+		}
 	}
 
 	env := cfgModel.NewEnvironment()
@@ -57,7 +63,7 @@ func main() {
 
 	services := []*cfgModel.Service{
 		{
-			Hostname: "svc1",
+			Hostname: "picard",
 			Ports: []*cfgModel.Port{
 				{
 					Name:     "http",
@@ -66,8 +72,22 @@ func main() {
 				},
 			},
 			Attributes: cfgModel.ServiceAttributes{
-				Name:      "svc1",
-				Namespace: "default",
+				Name:      "picard",
+				Namespace: "scylla",
+			},
+		},
+		{
+			Hostname: "comms-operator",
+			Ports: []*cfgModel.Port{
+				{
+					Name:     "http",
+					Port:     8080,
+					Protocol: "HTTP",
+				},
+			},
+			Attributes: cfgModel.ServiceAttributes{
+				Name:      "picard",
+				Namespace: "scylla",
 			},
 		},
 	}
@@ -78,14 +98,14 @@ func main() {
 	env.ConfigStore = store
 
 	// Initialize a PushContext with the config store.
-	push := cfgModel.NewPushContext()
-	push.Mesh = mesh.DefaultMeshConfig()
+	pushContext := cfgModel.NewPushContext()
+	pushContext.Mesh = meshConfig
 
-	push.InitContext(env, nil, nil)
+	pushContext.InitContext(env, nil, nil)
 
 	// Create a dummy Proxy. In a real scenario, this would reflect your proxy’s metadata.
 	proxy := &cfgModel.Proxy{
-		IPAddresses: []string{"127.0.0.1"},
+		IPAddresses: []string{"10.0.0.1"},
 		Metadata: &cfgModel.NodeMetadata{
 			Namespace:    "default",
 			IstioVersion: "1.22.0",
@@ -94,17 +114,16 @@ func main() {
 		DNSDomain:       "default.svc.cluster.local",
 		ConfigNamespace: "default",
 		IstioVersion:    cfgModel.ParseIstioVersion("1.22.0"),
-		SidecarScope:    cfgModel.DefaultSidecarScopeForNamespace(push, "default"),
+		SidecarScope:    cfgModel.DefaultSidecarScopeForNamespace(pushContext, "default"),
 	}
 
 	proxy.DiscoverIPMode()
 
 	configGen := &core.ConfigGeneratorImpl{}
 
-	// Use Istio's v1alpha3 conversion logic to build Envoy listeners.
-	listeners := configGen.BuildListeners(proxy, push)
+	listeners := configGen.BuildListeners(proxy, pushContext)
 
-	if err := protoio.WriteProtoJSONList(ctx, *output, toProtoMessageList(listeners)); err != nil {
+	if err := protoio.WriteProtoJSONList(ctx, *output, toProtoMessageList(listeners), listeners); err != nil {
 		log.Fatal().Err(err).Msg("Failed to generate Envoy config")
 	}
 }

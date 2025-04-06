@@ -3,54 +3,70 @@ package protoio
 import (
 	"context"
 	"fmt"
+	adminv3 "github.com/envoyproxy/go-control-plane/envoy/admin/v3"
+	listenerv3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
+	"istio.io/istio/istioctl/pkg/writer/envoy/configdump"
 	"os"
 )
 
-func WriteProtoJSONList(ctx context.Context, filename string, list []proto.Message) error {
+func WriteProtoJSONList(ctx context.Context, filename string, list []proto.Message, listeners []*listenerv3.Listener) error {
 	log := zerolog.Ctx(ctx)
-
-	marshaler := protojson.MarshalOptions{
-		Multiline:       true,
-		Indent:          "  ",
-		EmitUnpopulated: false,
-		UseProtoNames:   true,
-		Resolver:        protoregistry.GlobalTypes,
-	}
-
-	log.Info().Msg("Cathal")
 
 	f, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("failed to create file %q: %w", filename, err)
 	}
-	defer f.Close()
 
-	if _, err := f.WriteString("[\n"); err != nil {
-		return fmt.Errorf("failed to write to file: %w", err)
-	}
-
-	for i, msg := range list {
-		out, err := marshaler.Marshal(msg)
+	defer func(f *os.File) {
+		err := f.Close()
 		if err != nil {
-			return fmt.Errorf("failed to marshal proto message: %w", err)
+			log.Error().Err(err).Msg("failed to close file")
 		}
-		if _, err := f.Write(out); err != nil {
-			return fmt.Errorf("failed to write JSON to file: %w", err)
-		}
-		if i < len(list)-1 {
-			if _, err := f.WriteString(",\n"); err != nil {
-				return fmt.Errorf("failed to write comma: %w", err)
-			}
-		}
+	}(f)
+
+	cfgDump, err := buildConfigDumpFromListeners(listeners)
+
+	jDada, _ := protojson.Marshal(cfgDump)
+
+	configWriter := configdump.ConfigWriter{Stdout: f}
+
+	if err := configWriter.Prime(jDada); err != nil {
+		log.Fatal().Err(err).Msgf("Failed to prime config writer")
 	}
 
-	if _, err := f.WriteString("\n]\n"); err != nil {
-		return fmt.Errorf("failed to finalize JSON array: %w", err)
+	if err := configWriter.PrintListenerDump(configdump.ListenerFilter{}, "json"); err != nil {
+		log.Fatal().Err(err).Msg("failed to print listener dump")
 	}
 
 	return nil
+}
+
+func buildConfigDumpFromListeners(listeners []*listenerv3.Listener) (*adminv3.ConfigDump, error) {
+	listenerDump := adminv3.ListenersConfigDump{}
+
+	for _, l := range listeners {
+		anyListener, err := anypb.New(l)
+		if err != nil {
+			return nil, err
+		}
+
+		listenerDump.DynamicListeners = append(listenerDump.DynamicListeners, &adminv3.ListenersConfigDump_DynamicListener{
+			Name:         l.Name,
+			ActiveState:  &adminv3.ListenersConfigDump_DynamicListenerState{Listener: anyListener},
+			ClientStatus: adminv3.ClientResourceStatus_ACKED,
+		})
+	}
+
+	anyDump, err := anypb.New(&listenerDump)
+	if err != nil {
+		return nil, err
+	}
+
+	return &adminv3.ConfigDump{
+		Configs: []*anypb.Any{anyDump},
+	}, nil
 }
