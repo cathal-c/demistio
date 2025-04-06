@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1
 kind: ServiceEntry
 metadata:
   name: external-svc-httpbin
-  namespace : egress
+  namespace: egress
 spec:
   hosts:
   - example.com

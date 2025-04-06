@@ -1,7 +1,6 @@
 package model
 
 import (
-	log "github.com/rs/zerolog"
 	"istio.io/istio/pilot/pkg/model"
 	"istio.io/istio/pkg/config/host"
 	"istio.io/istio/pkg/config/labels"
