@@ -52,16 +52,37 @@ func (l *LocalServiceDiscovery) MCSServices() []model.MCSServiceInfo {
 	return nil
 }
 
-func (l *LocalServiceDiscovery) GetProxyServiceInstances(*model.Proxy) []*model.ServiceInstance {
-	return []*model.ServiceInstance{
-		{
-			Service:     l.services[0],
-			ServicePort: l.services[0].Ports[0],
-			Endpoint: &model.IstioEndpoint{
-				Addresses:       []string{"10.0.0.2"},
-				EndpointPort:    uint32(l.services[0].Ports[0].Port),
-				ServicePortName: l.services[0].Ports[0].Name,
+func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*model.ServiceInstance {
+	if len(proxy.IPAddresses) == 0 {
+		return nil
+	}
+
+	switch proxy.IPAddresses[0] {
+	case "10.0.0.2":
+		return []*model.ServiceInstance{
+			{
+				Service:     l.services[0], // picard
+				ServicePort: l.services[0].Ports[0],
+				Endpoint: &model.IstioEndpoint{
+					Addresses:       []string{"10.0.0.2"},
+					EndpointPort:    uint32(l.services[0].Ports[0].Port),
+					ServicePortName: l.services[0].Ports[0].Name,
+				},
 			},
-		},
+		}
+	case "10.0.0.3":
+		return []*model.ServiceInstance{
+			{
+				Service:     l.services[1], // comms-operator
+				ServicePort: l.services[1].Ports[0],
+				Endpoint: &model.IstioEndpoint{
+					Addresses:       []string{"10.0.0.3"},
+					EndpointPort:    uint32(l.services[1].Ports[0].Port),
+					ServicePortName: l.services[1].Ports[0].Name,
+				},
+			},
+		}
+	default:
+		return nil
 	}
 }

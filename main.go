@@ -6,8 +6,8 @@ import (
 	"github.com/cathal-c/demistio/pkg/model"
 	"github.com/cathal-c/demistio/pkg/protoio"
 	"github.com/rs/zerolog"
-	"google.golang.org/protobuf/proto"
-	v1 "istio.io/api/networking/v1"
+	networkingV1 "istio.io/api/networking/v1"
+	securityV1 "istio.io/api/security/v1"
 	"istio.io/istio/pilot/pkg/config/memory"
 	cfgModel "istio.io/istio/pilot/pkg/model"
 	"istio.io/istio/pilot/pkg/networking/core"
@@ -18,6 +18,11 @@ import (
 	"istio.io/istio/pkg/config/schema/collections"
 	"istio.io/istio/pkg/config/schema/gvk"
 	"os"
+	"time"
+)
+
+const (
+	version = "networkingV1.25.1"
 )
 
 var (
@@ -32,6 +37,8 @@ func main() {
 
 	// Create an in-memory config store, registering required resource types
 	store := memory.Make(collection.SchemasFor(
+		collections.DestinationRule,
+		collections.PeerAuthentication,
 		collections.Service,
 		collections.ServiceEntry,
 	))
@@ -39,11 +46,38 @@ func main() {
 	configs := []config.Config{
 		{
 			Meta: config.Meta{
+				GroupVersionKind: gvk.PeerAuthentication,
+				Name:             "default",
+				Namespace:        "istio-system",
+			},
+			Spec: &securityV1.PeerAuthentication{
+				Mtls: &securityV1.PeerAuthentication_MutualTLS{
+					Mode: securityV1.PeerAuthentication_MutualTLS_STRICT,
+				},
+			},
+		},
+		{
+			Meta: config.Meta{
+				GroupVersionKind: gvk.DestinationRule,
+				Name:             "default",
+				Namespace:        "istio-system",
+			},
+			Spec: &networkingV1.DestinationRule{
+				Host: "*.svc.cluster.local",
+				TrafficPolicy: &networkingV1.TrafficPolicy{
+					Tls: &networkingV1.ClientTLSSettings{
+						Mode: networkingV1.ClientTLSSettings_ISTIO_MUTUAL,
+					},
+				},
+			},
+		},
+		{
+			Meta: config.Meta{
 				GroupVersionKind: gvk.ServiceEntry,
 				Namespace:        "default",
 				Name:             "example-service",
 			},
-			Spec: &v1.ServiceEntry{
+			Spec: &networkingV1.ServiceEntry{
 				Hosts: []string{"example.com"},
 			},
 		},
@@ -51,7 +85,7 @@ func main() {
 
 	for _, c := range configs {
 		if _, err := store.Create(c); err != nil {
-			log.Fatal().Err(err).Msg("Failed to create ServiceEntry")
+			log.Fatal().Err(err).Msg("Failed to create config")
 		}
 	}
 
@@ -63,7 +97,7 @@ func main() {
 
 	services := []*cfgModel.Service{
 		{
-			Hostname: "picard",
+			Hostname: "picard.scylla.svc.cluster.local",
 			Ports: []*cfgModel.Port{
 				{
 					Name:     "http",
@@ -77,7 +111,7 @@ func main() {
 			},
 		},
 		{
-			Hostname: "comms-operator",
+			Hostname: "comms-operator.scylla.svc.cluster.local",
 			Ports: []*cfgModel.Port{
 				{
 					Name:     "http",
@@ -86,7 +120,7 @@ func main() {
 				},
 			},
 			Attributes: cfgModel.ServiceAttributes{
-				Name:      "picard",
+				Name:      "comms-operator",
 				Namespace: "scylla",
 			},
 		},
@@ -101,7 +135,9 @@ func main() {
 	pushContext := cfgModel.NewPushContext()
 	pushContext.Mesh = meshConfig
 
-	pushContext.InitContext(env, nil, nil)
+	if err := pushContext.InitContext(env, nil, nil); err != nil {
+		log.Fatal().Err(err).Msg("Failed to init push context")
+	}
 
 	// Create a dummy Proxy. In a real scenario, this would reflect your proxy’s metadata.
 	proxy := &cfgModel.Proxy{
@@ -123,7 +159,15 @@ func main() {
 
 	listeners := configGen.BuildListeners(proxy, pushContext)
 
-	if err := protoio.WriteProtoJSONList(ctx, *output, toProtoMessageList(listeners), listeners); err != nil {
+	pushReq := &cfgModel.PushRequest{
+		Push:  pushContext,
+		Full:  true,
+		Start: time.Now(),
+	}
+
+	routes, _ := configGen.BuildHTTPRoutes(proxy, pushReq, core.ExtractRoutesFromListeners(listeners))
+
+	if err := protoio.WriteProtoJSONList(ctx, *output, listeners, routes); err != nil {
 		log.Fatal().Err(err).Msg("Failed to generate Envoy config")
 	}
 }
@@ -148,12 +192,4 @@ func setupLogs() zerolog.Logger {
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	return log
-}
-
-func toProtoMessageList[T proto.Message](in []T) []proto.Message {
-	out := make([]proto.Message, len(in))
-	for i, v := range in {
-		out[i] = v
-	}
-	return out
 }

@@ -1,14 +1,13 @@
 module github.com/cathal-c/demistio
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.24.2
 
 require (
+	github.com/envoyproxy/go-control-plane/envoy v1.32.4
 	github.com/rs/zerolog v1.34.0
 	google.golang.org/protobuf v1.36.6
-	istio.io/api v1.25.0-alpha.0.0.20250401070747-f55d9659dc27
-	istio.io/istio v0.0.0-20250405135649-76765f3d9a9c
+	istio.io/api v1.25.1
+	istio.io/istio v0.0.0-20250322053744-be4b14ad8be8
 )
 
 require (
@@ -31,10 +30,10 @@ require (
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/envoyproxy/go-control-plane/contrib v1.32.5-0.20250328202736-d2aa792b145a // indirect
-	github.com/envoyproxy/go-control-plane/envoy v1.32.5-0.20250328202736-d2aa792b145a // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -124,9 +123,8 @@ require (
 	google.golang.org/grpc v1.71.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	istio.io/client-go v1.25.0-alpha.0.0.20250401071445-73edf716803d // indirect
+	istio.io/client-go v1.25.1-0.20250321204545-b102c2d01354 // indirect
 	k8s.io/api v0.32.3 // indirect
 	k8s.io/apiextensions-apiserver v0.32.3 // indirect
 	k8s.io/apimachinery v0.32.3 // indirect
