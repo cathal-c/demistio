@@ -97,32 +97,36 @@ func main() {
 
 	services := []*cfgModel.Service{
 		{
-			Hostname: "picard.scylla.svc.cluster.local",
-			Ports: []*cfgModel.Port{
-				{
-					Name:     "http",
-					Port:     8080,
-					Protocol: "HTTP",
-				},
-			},
 			Attributes: cfgModel.ServiceAttributes{
 				Name:      "picard",
 				Namespace: "scylla",
 			},
-		},
-		{
-			Hostname: "comms-operator.scylla.svc.cluster.local",
+			DefaultAddress: "10.0.0.2",
+			Hostname:       "picard.scylla.svc.cluster.local",
 			Ports: []*cfgModel.Port{
 				{
-					Name:     "http",
-					Port:     8080,
-					Protocol: "HTTP",
+					Name: "http",
+					Port: 8080,
+					//Protocol: "HTTP",
 				},
 			},
+			Resolution: cfgModel.ClientSideLB,
+		},
+		{
 			Attributes: cfgModel.ServiceAttributes{
 				Name:      "comms-operator",
 				Namespace: "scylla",
 			},
+			DefaultAddress: "10.0.0.3",
+			Hostname:       "comms-operator.scylla.svc.cluster.local",
+			Ports: []*cfgModel.Port{
+				{
+					Name: "http",
+					Port: 8080,
+					//Protocol: "HTTP",
+				},
+			},
+			Resolution: cfgModel.ClientSideLB,
 		},
 	}
 

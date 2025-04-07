@@ -57,25 +57,25 @@ func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*
 	}
 
 	switch proxy.IPAddresses[0] {
-	case "10.0.0.2":
+	case "10.0.0.2": // picard
 		return []*model.ServiceInstance{
 			{
-				Service:     l.services[0], // picard
+				Service:     l.services[0],
 				ServicePort: l.services[0].Ports[0],
 				Endpoint: &model.IstioEndpoint{
-					Addresses:       []string{"10.0.0.2"},
+					Addresses:       []string{l.services[0].DefaultAddress},
 					EndpointPort:    uint32(l.services[0].Ports[0].Port),
 					ServicePortName: l.services[0].Ports[0].Name,
 				},
 			},
 		}
-	case "10.0.0.3":
+	case "10.0.0.3": // comms-operator
 		return []*model.ServiceInstance{
 			{
-				Service:     l.services[1], // comms-operator
+				Service:     l.services[1],
 				ServicePort: l.services[1].Ports[0],
 				Endpoint: &model.IstioEndpoint{
-					Addresses:       []string{"10.0.0.3"},
+					Addresses:       []string{l.services[0].DefaultAddress},
 					EndpointPort:    uint32(l.services[1].Ports[0].Port),
 					ServicePortName: l.services[1].Ports[0].Name,
 				},
