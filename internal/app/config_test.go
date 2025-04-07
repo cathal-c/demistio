@@ -34,14 +34,10 @@ func TestParseFlagsToConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Reset flag.CommandLine and os.Args
 			flag.CommandLine = flag.NewFlagSet(tt.name, flag.ContinueOnError)
 			os.Args = tt.args
 
-			// Set up logger context
-			logger := zerolog.Nop()
-			ctx := logger.WithContext(context.Background())
-
+			ctx := zerolog.Nop().WithContext(context.Background())
 			result := ParseFlagsToConfig(ctx)
 
 			if !reflect.DeepEqual(result, tt.expected) {
