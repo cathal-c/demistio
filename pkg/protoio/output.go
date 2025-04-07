@@ -70,6 +70,7 @@ func buildConfigDump(listeners []*listenerv3.Listener, routes []*discoveryv3.Res
 		if err := route.Resource.UnmarshalTo(rc); err != nil {
 			return nil, fmt.Errorf("unmarshal route resource: %w", err)
 		}
+
 		anyRoute, err := anypb.New(rc)
 		if err != nil {
 			return nil, err

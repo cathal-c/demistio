@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	version = "networkingV1.25.1"
+	version = "v1.25.1"
 )
 
 var (
@@ -97,32 +97,36 @@ func main() {
 
 	services := []*cfgModel.Service{
 		{
-			Hostname: "picard.scylla.svc.cluster.local",
+			Attributes: cfgModel.ServiceAttributes{
+				Name:      "svc-a",
+				Namespace: "ns-a",
+			},
+			DefaultAddress: "10.0.0.2",
+			Hostname:       "svc-a.ns-a.svc.cluster.local",
 			Ports: []*cfgModel.Port{
 				{
-					Name:     "http",
-					Port:     8080,
-					Protocol: "HTTP",
+					Name: "http",
+					Port: 8080,
+					//Protocol: "HTTP",
 				},
 			},
-			Attributes: cfgModel.ServiceAttributes{
-				Name:      "picard",
-				Namespace: "scylla",
-			},
+			Resolution: cfgModel.ClientSideLB,
 		},
 		{
-			Hostname: "comms-operator.scylla.svc.cluster.local",
+			Attributes: cfgModel.ServiceAttributes{
+				Name:      "svc-b",
+				Namespace: "ns-b",
+			},
+			DefaultAddress: "10.0.0.3",
+			Hostname:       "svc-b.ns-b.svc.cluster.local",
 			Ports: []*cfgModel.Port{
 				{
-					Name:     "http",
-					Port:     8080,
-					Protocol: "HTTP",
+					Name: "http",
+					Port: 8080,
+					//Protocol: "HTTP",
 				},
 			},
-			Attributes: cfgModel.ServiceAttributes{
-				Name:      "comms-operator",
-				Namespace: "scylla",
-			},
+			Resolution: cfgModel.ClientSideLB,
 		},
 	}
 
