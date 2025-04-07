@@ -57,7 +57,7 @@ func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*
 	}
 
 	switch proxy.IPAddresses[0] {
-	case "10.0.0.2": // picard
+	case "10.0.0.2": // svc-a
 		return []*model.ServiceInstance{
 			{
 				Service:     l.services[0],
@@ -69,7 +69,7 @@ func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*
 				},
 			},
 		}
-	case "10.0.0.3": // comms-operator
+	case "10.0.0.3": // svc-a
 		return []*model.ServiceInstance{
 			{
 				Service:     l.services[1],

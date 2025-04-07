@@ -98,11 +98,11 @@ func main() {
 	services := []*cfgModel.Service{
 		{
 			Attributes: cfgModel.ServiceAttributes{
-				Name:      "picard",
-				Namespace: "scylla",
+				Name:      "svc-a",
+				Namespace: "ns-a",
 			},
 			DefaultAddress: "10.0.0.2",
-			Hostname:       "picard.scylla.svc.cluster.local",
+			Hostname:       "svc-a.ns-a.svc.cluster.local",
 			Ports: []*cfgModel.Port{
 				{
 					Name: "http",
@@ -114,11 +114,11 @@ func main() {
 		},
 		{
 			Attributes: cfgModel.ServiceAttributes{
-				Name:      "comms-operator",
-				Namespace: "scylla",
+				Name:      "svc-b",
+				Namespace: "ns-b",
 			},
 			DefaultAddress: "10.0.0.3",
-			Hostname:       "comms-operator.scylla.svc.cluster.local",
+			Hostname:       "svc-b.ns-b.svc.cluster.local",
 			Ports: []*cfgModel.Port{
 				{
 					Name: "http",
