@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	version = "networkingV1.25.1"
+	version = "v1.25.1"
 )
 
 var (
