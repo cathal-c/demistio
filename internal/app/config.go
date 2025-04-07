@@ -1,29 +1,30 @@
 package app
 
 import (
-	"context"
 	"flag"
 	"github.com/rs/zerolog"
-	"os"
 )
 
 type Config struct {
-	Output string
+	LogLevel zerolog.Level
+	Output   string
 }
 
-func ParseFlagsToConfig(ctx context.Context) *Config {
-	log := zerolog.Ctx(ctx)
-
+func ParseFlagsToConfig() *Config {
 	// inputPtr := flag.String("input", "", "Path to YAML file containing Istio configs")
-	output := flag.String("output", "", "Output file for generated Envoy config (JSON)")
+	debug := flag.Bool("debug", false, "Enable debug mode")
+	output := flag.String("output", "out/envoy_config.json", "Output file for generated Envoy config (JSON)")
 	flag.Parse()
 
-	// os.Args[0] is always the binary
-	for _, arg := range os.Args[1:] {
-		log.Info().Msg(arg)
-	}
-
-	return &Config{
+	cfg := &Config{
 		Output: *output,
 	}
+
+	if *debug {
+		cfg.LogLevel = zerolog.DebugLevel
+	} else {
+		cfg.LogLevel = zerolog.InfoLevel
+	}
+
+	return cfg
 }

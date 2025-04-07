@@ -1,13 +1,11 @@
 package app
 
 import (
-	"context"
 	"flag"
-	"os"
-	"reflect"
-	"testing"
-
+	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog"
+	"os"
+	"testing"
 )
 
 func TestParseFlagsToConfig(t *testing.T) {
@@ -20,14 +18,32 @@ func TestParseFlagsToConfig(t *testing.T) {
 			name: "no flags",
 			args: []string{"cmd"},
 			expected: &Config{
-				Output: "",
+				LogLevel: zerolog.InfoLevel,
+				Output:   "out/envoy_config.json",
 			},
 		},
 		{
 			name: "output flag set",
-			args: []string{"cmd", "--output=/tmp/envoy.json"},
+			args: []string{"cmd", "--output=foo"},
 			expected: &Config{
-				Output: "/tmp/envoy.json",
+				LogLevel: zerolog.InfoLevel,
+				Output:   "foo",
+			},
+		},
+		{
+			name: "debug flag set",
+			args: []string{"cmd", "--debug=true"},
+			expected: &Config{
+				LogLevel: zerolog.DebugLevel,
+				Output:   "out/envoy_config.json",
+			},
+		},
+		{
+			name: "all flags set",
+			args: []string{"cmd", "--output=foo", "--debug=true"},
+			expected: &Config{
+				LogLevel: zerolog.DebugLevel,
+				Output:   "foo",
 			},
 		},
 	}
@@ -37,12 +53,17 @@ func TestParseFlagsToConfig(t *testing.T) {
 			flag.CommandLine = flag.NewFlagSet(tt.name, flag.ContinueOnError)
 			os.Args = tt.args
 
-			ctx := zerolog.Nop().WithContext(context.Background())
-			result := ParseFlagsToConfig(ctx)
+			got := ParseFlagsToConfig()
+			want := tt.expected
 
-			if !reflect.DeepEqual(result, tt.expected) {
-				t.Errorf("ParseFlagsToConfig() = %+v, want %+v", result, tt.expected)
+			if diff := cmp.Diff(want, got); diff != "" {
+				//t.Errorf("ParseFlagsToConfig() mismatch = %+v, want %+v", result, tt.expected)
+				t.Errorf("ParseFlagsToConfig() mismatch (-want +got):\n%s", diff)
 			}
+
+			//if !reflect.DeepEqual(result, tt.expected) {
+			//
+			//}
 		})
 	}
 }
