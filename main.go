@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"flag"
+	"github.com/cathal-c/demistio/internal/app"
 	"github.com/cathal-c/demistio/pkg/model"
 	"github.com/cathal-c/demistio/pkg/protoio"
 	"github.com/rs/zerolog"
@@ -25,15 +25,11 @@ const (
 	version = "v1.25.1"
 )
 
-var (
-	output *string
-)
-
 func main() {
 	log := setupLogs()
 	ctx := log.WithContext(context.Background())
 
-	parseFlags(log)
+	appConfig := app.ParseFlagsToConfig(ctx)
 
 	// Create an in-memory config store, registering required resource types
 	store := memory.Make(collection.SchemasFor(
@@ -171,21 +167,9 @@ func main() {
 
 	routes, _ := configGen.BuildHTTPRoutes(proxy, pushReq, core.ExtractRoutesFromListeners(listeners))
 
-	if err := protoio.WriteProtoJSONList(ctx, *output, listeners, routes); err != nil {
+	if err := protoio.WriteProtoJSONList(ctx, appConfig.Output, listeners, routes); err != nil {
 		log.Fatal().Err(err).Msg("Failed to generate Envoy config")
 	}
-}
-
-func parseFlags(log zerolog.Logger) *string {
-	// inputPtr := flag.String("input", "", "Path to YAML file containing Istio configs")
-	output = flag.String("output", "", "Output file for generated Envoy config (JSON)")
-	flag.Parse()
-
-	// os.Args[0] is always the binary
-	for _, arg := range os.Args[1:] {
-		log.Info().Msg(arg)
-	}
-	return output
 }
 
 func setupLogs() zerolog.Logger {
