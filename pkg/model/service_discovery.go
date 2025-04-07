@@ -75,7 +75,7 @@ func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*
 				Service:     l.services[1],
 				ServicePort: l.services[1].Ports[0],
 				Endpoint: &model.IstioEndpoint{
-					Addresses:       []string{l.services[0].DefaultAddress},
+					Addresses:       []string{l.services[1].DefaultAddress},
 					EndpointPort:    uint32(l.services[1].Ports[0].Port),
 					ServicePortName: l.services[1].Ports[0].Name,
 				},
