@@ -1,3 +1,5 @@
+BIN=demistio
+BIN_DIR?=bin
 OUTPUT_DIR?=out
 OUTPUT?=envoy_config.json
 
@@ -6,6 +8,10 @@ run:
 	@ENABLE_DELIMITED_STATS_TAG_REGEX=false \
 		PILOT_ENABLE_RDS_CACHE=false \
 		go run main.go -output=${OUTPUT_DIR}/${OUTPUT}
+
+bin:
+	@mkdir -p ${BIN_DIR}
+	go build -v -o ${BIN_DIR}/${BIN} main.go
 
 test:
 	@go test ./...
