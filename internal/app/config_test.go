@@ -57,13 +57,8 @@ func TestParseFlagsToConfig(t *testing.T) {
 			want := tt.expected
 
 			if diff := cmp.Diff(want, got); diff != "" {
-				//t.Errorf("ParseFlagsToConfig() mismatch = %+v, want %+v", result, tt.expected)
 				t.Errorf("ParseFlagsToConfig() mismatch (-want +got):\n%s", diff)
 			}
-
-			//if !reflect.DeepEqual(result, tt.expected) {
-			//
-			//}
 		})
 	}
 }
