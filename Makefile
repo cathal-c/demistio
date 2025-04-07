@@ -9,7 +9,7 @@ run:
 		PILOT_ENABLE_RDS_CACHE=false \
 		go run main.go -output=${OUTPUT_DIR}/${OUTPUT}
 
-bin:
+build:
 	@mkdir -p ${BIN_DIR}
 	go build -v -o ${BIN_DIR}/${BIN} main.go
 

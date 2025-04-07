@@ -1,32 +1,21 @@
-# Use the official Go image as the base image
-FROM golang:1.24.2 as builder
+FROM golang:1.24.2 AS builder
 
-# Set the working directory inside the container
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy the Go modules manifests
-COPY go.mod ./
+COPY go.mod go.sum ./
 
-# Download Go module dependencies
 RUN go mod download
 
-# Copy the source code into the container
-COPY . .
+COPY internal ./internal
+COPY pkg ./pkg
+COPY main.go Makefile ./
 
-# Build the Go binary
-RUN go build -o demistio main.go
+RUN make build
 
-# Use a minimal base image for the final container
 FROM debian:bullseye-slim
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Go binary from the builder stage
-COPY --from=builder /app/demistio .
+COPY --from=builder /workspace/bin/demistio .
 
-# Expose the port your application runs on (if applicable)
-EXPOSE 8080
-
-# Command to run the binary
 CMD ["./demistio"]
