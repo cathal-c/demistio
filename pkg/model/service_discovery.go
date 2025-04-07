@@ -69,7 +69,7 @@ func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*
 				},
 			},
 		}
-	case "10.0.0.3": // svc-a
+	case "10.0.0.3": // svc-b
 		return []*model.ServiceInstance{
 			{
 				Service:     l.services[1],
