@@ -21,26 +21,57 @@ type LocalServiceDiscovery struct {
 	model.NetworkGatewaysHandler
 }
 
+// Compile-time interface check. Does nothing other than ensure LocalServiceDiscovery implements required methods.
 var _ model.ServiceDiscovery = &LocalServiceDiscovery{}
 
 func (l *LocalServiceDiscovery) Services() []*model.Service {
 	return l.services
 }
 
-func (l *LocalServiceDiscovery) GetService(host.Name) *model.Service {
+func (l *LocalServiceDiscovery) GetService(hostname host.Name) *model.Service {
+	for _, service := range l.services {
+		if service.Hostname == hostname {
+			return service
+		}
+	}
+
 	return &model.Service{}
 }
 
-func (l *LocalServiceDiscovery) GetProxyServiceTargets(*model.Proxy) []model.ServiceTarget {
-	return []model.ServiceTarget{}
+func (l *LocalServiceDiscovery) GetProxyServiceTargets(proxy *model.Proxy) []model.ServiceTarget {
+	res := make([]model.ServiceTarget, 0)
+
+	for _, service := range l.services {
+		for _, address := range proxy.IPAddresses {
+			if address == service.DefaultAddress {
+				for _, port := range service.Ports {
+					svcTarget := model.ServiceTarget{
+						Service: service,
+						Port: model.ServiceInstancePort{
+							ServicePort: &model.Port{
+								Name:     port.Name,
+								Port:     port.Port,
+								Protocol: port.Protocol,
+							},
+							TargetPort: uint32(port.Port),
+						},
+					}
+
+					res = append(res, svcTarget)
+				}
+			}
+		}
+	}
+
+	return res
 }
 
-func (l *LocalServiceDiscovery) GetProxyWorkloadLabels(*model.Proxy) labels.Instance {
+func (l *LocalServiceDiscovery) GetProxyWorkloadLabels(node *model.Proxy) labels.Instance {
+	if node != nil {
+		return node.Labels
+	}
+
 	return labels.Instance{}
-}
-
-func (l *LocalServiceDiscovery) GetIstioServiceAccounts(*model.Service) []string {
-	return []string{}
 }
 
 func (l *LocalServiceDiscovery) NetworkGateways() []model.NetworkGateway {
@@ -49,39 +80,4 @@ func (l *LocalServiceDiscovery) NetworkGateways() []model.NetworkGateway {
 
 func (l *LocalServiceDiscovery) MCSServices() []model.MCSServiceInfo {
 	return []model.MCSServiceInfo{}
-}
-
-func (l *LocalServiceDiscovery) GetProxyServiceInstances(proxy *model.Proxy) []*model.ServiceInstance {
-	if len(proxy.IPAddresses) == 0 {
-		return nil
-	}
-
-	switch proxy.IPAddresses[0] {
-	case "10.0.0.2": // svc-a
-		return []*model.ServiceInstance{
-			{
-				Service:     l.services[0],
-				ServicePort: l.services[0].Ports[0],
-				Endpoint: &model.IstioEndpoint{
-					Addresses:       []string{l.services[0].DefaultAddress},
-					EndpointPort:    uint32(l.services[0].Ports[0].Port),
-					ServicePortName: l.services[0].Ports[0].Name,
-				},
-			},
-		}
-	case "10.0.0.3": // svc-b
-		return []*model.ServiceInstance{
-			{
-				Service:     l.services[1],
-				ServicePort: l.services[1].Ports[0],
-				Endpoint: &model.IstioEndpoint{
-					Addresses:       []string{l.services[1].DefaultAddress},
-					EndpointPort:    uint32(l.services[1].Ports[0].Port),
-					ServicePortName: l.services[1].Ports[0].Name,
-				},
-			},
-		}
-	default:
-		return nil
-	}
 }
