@@ -33,8 +33,6 @@ func (l *LocalServiceDiscovery) GetService(hostname host.Name) *model.Service {
 		if service.Hostname == hostname {
 			return service
 		}
-
-		return nil
 	}
 
 	return &model.Service{}
