@@ -7,7 +7,7 @@ run:
 	@mkdir -p ${OUTPUT_DIR}
 	@ENABLE_DELIMITED_STATS_TAG_REGEX=false \
 		PILOT_ENABLE_RDS_CACHE=false \
-		go run main.go -output=${OUTPUT_DIR}/${OUTPUT}
+		go run main.go -output=${OUTPUT_DIR}/${OUTPUT} -debug
 
 build:
 	@mkdir -p ${BIN_DIR}

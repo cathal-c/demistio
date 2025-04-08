@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/cathal-c/demistio/pkg/catalog"
 	"github.com/cathal-c/demistio/pkg/model"
-	"github.com/cathal-c/demistio/pkg/protoio"
+	"github.com/cathal-c/demistio/pkg/proto"
 	"github.com/rs/zerolog"
 	v1 "istio.io/api/networking/v1"
 	v2 "istio.io/api/security/v1"
@@ -119,7 +119,7 @@ func Generate(ctx context.Context, cfg *Config) error {
 
 	routes, _ := configGen.BuildHTTPRoutes(proxy, pushReq, core.ExtractRoutesFromListeners(listeners))
 
-	if err := protoio.WriteProtoJSONList(ctx, cfg.Output, listeners, routes); err != nil {
+	if err := proto.WriteConfigDumpToFile(ctx, cfg.Output, listeners, routes); err != nil {
 		return fmt.Errorf("writing proto json list: %v", err)
 	}
 
