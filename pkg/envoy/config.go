@@ -28,6 +28,24 @@ func BuildListenerConfigDump(listeners []*listenerv3.Listener) (*adminv3.Listene
 	return listenerDump, nil
 }
 
+func BuildClusterConfigDump(clusters []*discoveryv3.Resource) (*adminv3.ClustersConfigDump, error) {
+	clusterDump := &adminv3.ClustersConfigDump{}
+
+	for _, l := range clusters {
+		anyCluster, err := anypb.New(l)
+		if err != nil {
+			return nil, fmt.Errorf("build anypb: %w", err)
+		}
+
+		clusterDump.DynamicActiveClusters = append(clusterDump.DynamicActiveClusters, &adminv3.ClustersConfigDump_DynamicCluster{
+			Cluster:      anyCluster,
+			ClientStatus: adminv3.ClientResourceStatus_ACKED,
+		})
+	}
+
+	return clusterDump, nil
+}
+
 func BuildRoutesConfigDump(routes []*discoveryv3.Resource) (*adminv3.RoutesConfigDump, error) {
 	routesDump := &adminv3.RoutesConfigDump{}
 
@@ -51,8 +69,13 @@ func BuildRoutesConfigDump(routes []*discoveryv3.Resource) (*adminv3.RoutesConfi
 	return routesDump, nil
 }
 
-func BuildFullConfigDump(listeners []*listenerv3.Listener, routes []*discoveryv3.Resource) (*adminv3.ConfigDump, error) {
+func BuildFullConfigDump(listeners []*listenerv3.Listener, clusters []*discoveryv3.Resource, routes []*discoveryv3.Resource) (*adminv3.ConfigDump, error) {
 	listenerDump, err := BuildListenerConfigDump(listeners)
+	if err != nil {
+		return nil, fmt.Errorf("build listener config dump: %w", err)
+	}
+
+	clusterDump, err := BuildClusterConfigDump(clusters)
 	if err != nil {
 		return nil, fmt.Errorf("build listener config dump: %w", err)
 	}
@@ -66,12 +89,18 @@ func BuildFullConfigDump(listeners []*listenerv3.Listener, routes []*discoveryv3
 	if err != nil {
 		return nil, err
 	}
+
+	cDump, err := anypb.New(clusterDump)
+	if err != nil {
+		return nil, err
+	}
+
 	rDump, err := anypb.New(routesDump)
 	if err != nil {
 		return nil, err
 	}
 
 	return &adminv3.ConfigDump{
-		Configs: []*anypb.Any{lDump, rDump},
+		Configs: []*anypb.Any{lDump, cDump, rDump},
 	}, nil
 }

@@ -11,8 +11,8 @@ import (
 )
 
 // WriteConfigDumpToFile creates a config dump and writes it to a file as JSON.
-func WriteConfigDumpToFile(ctx context.Context, path string, listeners []*listenerv3.Listener, routes []*discoveryv3.Resource) error {
-	cfgDump, err := envoy.BuildFullConfigDump(listeners, routes)
+func WriteConfigDumpToFile(ctx context.Context, path string, listeners []*listenerv3.Listener, clusters []*discoveryv3.Resource, routes []*discoveryv3.Resource) error {
+	cfgDump, err := envoy.BuildFullConfigDump(listeners, clusters, routes)
 	if err != nil {
 		return fmt.Errorf("build config dump: %w", err)
 	}
