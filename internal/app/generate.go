@@ -3,11 +3,12 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/cathal-c/demistio/pkg/catalog"
 	"github.com/cathal-c/demistio/pkg/model"
 	"github.com/cathal-c/demistio/pkg/protoio"
 	"github.com/rs/zerolog"
-	networkingV1 "istio.io/api/networking/v1"
-	securityV1 "istio.io/api/security/v1"
+	v1 "istio.io/api/networking/v1"
+	v2 "istio.io/api/security/v1"
 	"istio.io/istio/pilot/pkg/config/memory"
 	cfgModel "istio.io/istio/pilot/pkg/model"
 	"istio.io/istio/pilot/pkg/networking/core"
@@ -16,12 +17,11 @@ import (
 	"istio.io/istio/pkg/config/mesh/meshwatcher"
 	"istio.io/istio/pkg/config/schema/collection"
 	"istio.io/istio/pkg/config/schema/collections"
-	"istio.io/istio/pkg/config/schema/gvk"
 	"time"
 )
 
 func Generate(ctx context.Context, cfg *Config) error {
-	log := zerolog.Ctx(ctx)
+	//log := zerolog.Ctx(ctx)
 
 	// Create an in-memory config store, registering required resource types
 	store := memory.Make(collection.SchemasFor(
@@ -32,52 +32,14 @@ func Generate(ctx context.Context, cfg *Config) error {
 	))
 
 	configs := []config.Config{
-		{
-			Meta: config.Meta{
-				GroupVersionKind: gvk.PeerAuthentication,
-				Name:             "default",
-				Namespace:        "istio-system",
-			},
-			Spec: &securityV1.PeerAuthentication{
-				Mtls: &securityV1.PeerAuthentication_MutualTLS{
-					Mode: securityV1.PeerAuthentication_MutualTLS_STRICT,
-				},
-			},
-		},
-		{
-			Meta: config.Meta{
-				GroupVersionKind: gvk.DestinationRule,
-				Name:             "default",
-				Namespace:        "istio-system",
-			},
-			Spec: &networkingV1.DestinationRule{
-				Host: "*.svc.cluster.local",
-				TrafficPolicy: &networkingV1.TrafficPolicy{
-					Tls: &networkingV1.ClientTLSSettings{
-						Mode: networkingV1.ClientTLSSettings_ISTIO_MUTUAL,
-					},
-				},
-			},
-		},
-		{
-			Meta: config.Meta{
-				GroupVersionKind: gvk.ServiceEntry,
-				Namespace:        "default",
-				Name:             "example-service",
-			},
-			Spec: &networkingV1.ServiceEntry{
-				Hosts: []string{"example.com"},
-			},
-		},
+		catalog.NewPeerAuthenticationBuilder(catalog.DefaultResourceName, catalog.DefaultIstioNamespace).WithMutualTlsMode(v2.PeerAuthentication_MutualTLS_STRICT).Build(),
+		catalog.NewDestinationRuleBuilder(catalog.DefaultResourceName, catalog.DefaultIstioNamespace).WithHost("*.svc.cluster.local").WithTlsMode(v1.ClientTLSSettings_ISTIO_MUTUAL).Build(),
+		catalog.NewServiceEntryBuilder("google", catalog.DefaultIstioNamespace).WithHosts("google.com").Build(),
 	}
 
-	for _, c := range configs {
-		if _, err := store.Create(c); err != nil {
-			return fmt.Errorf("adding config to store: %v", err)
-		}
+	if err := addConfigsToConfigStore(ctx, store, configs); err != nil {
+		return fmt.Errorf("adding configs to config store: %w", err)
 	}
-
-	log.Debug().Msgf("added %d configs to store", len(configs))
 
 	env := cfgModel.NewEnvironment()
 
@@ -160,6 +122,20 @@ func Generate(ctx context.Context, cfg *Config) error {
 	if err := protoio.WriteProtoJSONList(ctx, cfg.Output, listeners, routes); err != nil {
 		return fmt.Errorf("writing proto json list: %v", err)
 	}
+
+	return nil
+}
+
+func addConfigsToConfigStore(ctx context.Context, store cfgModel.ConfigStore, configs []config.Config) error {
+	log := zerolog.Ctx(ctx)
+
+	for _, c := range configs {
+		if _, err := store.Create(c); err != nil {
+			return fmt.Errorf("%s: %w", c.Name, err)
+		}
+	}
+
+	log.Debug().Msgf("added %d configs to store", len(configs))
 
 	return nil
 }
