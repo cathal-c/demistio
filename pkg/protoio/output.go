@@ -29,21 +29,22 @@ func WriteProtoJSONList(ctx context.Context, filename string, listeners []*liste
 	}(f)
 
 	cfgDump, err := buildConfigDump(listeners, routes)
+	if err != nil {
+		return fmt.Errorf("build config dump: %w", err)
+	}
 
-	if true {
-		data, err := protojson.MarshalOptions{
-			Multiline:       true,
-			Indent:          "  ",
-			EmitUnpopulated: false,
-			UseProtoNames:   true,
-		}.Marshal(cfgDump)
-		if err != nil {
-			return fmt.Errorf("failed to marshal config dump: %w", err)
-		}
+	data, err := protojson.MarshalOptions{
+		Multiline:       true,
+		Indent:          "  ",
+		EmitUnpopulated: false,
+		UseProtoNames:   true,
+	}.Marshal(cfgDump)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config dump: %w", err)
+	}
 
-		if _, err := f.Write(data); err != nil {
-			return fmt.Errorf("failed to write config dump: %w", err)
-		}
+	if _, err := f.Write(data); err != nil {
+		return fmt.Errorf("failed to write config dump: %w", err)
 	}
 
 	return nil

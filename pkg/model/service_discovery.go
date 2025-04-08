@@ -14,8 +14,8 @@ func NewLocalServiceDiscovery(services []*model.Service) *LocalServiceDiscovery 
 
 // LocalServiceDiscovery is an in-memory ServiceDiscovery with mock services
 type LocalServiceDiscovery struct {
-	services         []*model.Service
-	serviceInstances []*model.ServiceInstance
+	services []*model.Service
+	//serviceInstances []*model.ServiceInstance
 
 	model.NoopAmbientIndexes
 	model.NetworkGatewaysHandler

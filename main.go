@@ -7,10 +7,6 @@ import (
 	"os"
 )
 
-const (
-	version = "v1.25.1"
-)
-
 func main() {
 	appConfig := app.ParseFlagsToConfig()
 
