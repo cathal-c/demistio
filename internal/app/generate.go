@@ -97,7 +97,6 @@ func Generate(ctx context.Context, cfg *Config) error {
 				{
 					Name: "http",
 					Port: 8080,
-					//Protocol: "HTTP",
 				},
 			},
 			Resolution: cfgModel.ClientSideLB,
@@ -113,7 +112,6 @@ func Generate(ctx context.Context, cfg *Config) error {
 				{
 					Name: "http",
 					Port: 8080,
-					//Protocol: "HTTP",
 				},
 			},
 			Resolution: cfgModel.ClientSideLB,
