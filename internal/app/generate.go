@@ -119,7 +119,9 @@ func Generate(ctx context.Context, cfg *Config) error {
 
 	routes, _ := configGen.BuildHTTPRoutes(proxy, pushReq, core.ExtractRoutesFromListeners(listeners))
 
-	if err := proto.WriteConfigDumpToFile(ctx, cfg.Output, listeners, routes); err != nil {
+	clusters, _ := configGen.BuildClusters(proxy, pushReq)
+
+	if err := proto.WriteConfigDumpToFile(ctx, cfg.Output, listeners, clusters, routes); err != nil {
 		return fmt.Errorf("writing proto json list: %v", err)
 	}
 
